@@ -28,13 +28,50 @@
 
 extern "C" {
 
+#include "i2c_api.h"
 #include "py/runtime.h"
 #include "modmicrobit.h"
+#include "microbitpin.h"
+#include "microbitobj.h"
 
 typedef struct _microbit_i2c_obj_t {
     mp_obj_base_t base;
     MicroBitI2C *i2c;
 } microbit_i2c_obj_t;
+
+STATIC mp_obj_t microbit_i2c_init(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_frequency, MP_ARG_INT,                  {.u_int = 100000} },
+        { MP_QSTR_scl,       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none } },
+        { MP_QSTR_sda,       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none } },
+    };
+
+    // parse args
+    microbit_i2c_obj_t *self = (microbit_i2c_obj_t*)pos_args[0];
+    struct {
+        mp_arg_val_t frequency, scl, sda;
+    } args;
+    mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args,
+        MP_ARRAY_SIZE(allowed_args), allowed_args, (mp_arg_val_t*)&args);
+
+    // get pins
+    PinName p_scl = MICROBIT_PIN_P19;
+    PinName p_sda = MICROBIT_PIN_P20;
+    if (args.scl.u_obj != mp_const_none) {
+        p_scl = microbit_obj_get_pin_name(args.scl.u_obj);
+    }
+    if (args.sda.u_obj != mp_const_none) {
+        p_sda = microbit_obj_get_pin_name(args.sda.u_obj);
+    }
+
+    // initialise i2c
+    i2c_t _i2c;
+    i2c_init(&_i2c, p_sda, p_scl);
+    i2c_frequency(&_i2c, args.frequency.u_int);
+
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(microbit_i2c_init_obj, 1, microbit_i2c_init);
 
 STATIC mp_obj_t microbit_i2c_read(mp_uint_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     static const mp_arg_t allowed_args[] = {
@@ -85,6 +122,7 @@ STATIC mp_obj_t microbit_i2c_write(mp_uint_t n_args, const mp_obj_t *pos_args, m
 MP_DEFINE_CONST_FUN_OBJ_KW(microbit_i2c_write_obj, 1, microbit_i2c_write);
 
 STATIC const mp_map_elem_t microbit_i2c_locals_dict_table[] = {
+    { MP_OBJ_NEW_QSTR(MP_QSTR_init), (mp_obj_t)&microbit_i2c_init_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_read), (mp_obj_t)&microbit_i2c_read_obj },
     { MP_OBJ_NEW_QSTR(MP_QSTR_write), (mp_obj_t)&microbit_i2c_write_obj },
 };
