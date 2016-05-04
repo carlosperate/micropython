@@ -191,6 +191,7 @@ Q(get_field_strength)
 
 Q(MicroBitI2C)
 Q(i2c)
+Q(frequency)
 Q(read)
 Q(write)
 Q(addr)
