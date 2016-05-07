@@ -82,9 +82,11 @@ mp_obj_t microbit_accelerometer_get_rate(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(microbit_accelerometer_get_rate_obj, microbit_accelerometer_get_rate);
 
-mp_obj_t microbit_accelerometer_set_rate(mp_obj_t self_in, mp_int_t hz) {
+mp_obj_t microbit_accelerometer_set_rate(mp_obj_t self_in, mp_obj_t hz_obj) {
     microbit_accelerometer_obj_t *self = (microbit_accelerometer_obj_t*)self_in;
-    self->accelerometer->setPeriod(1000 / hz);
+    mp_int_t hz = mp_obj_get_int(hz_obj);
+    mp_int_t period = (hz == 0) ? 0 : 1000 / hz;
+    self->accelerometer->setPeriod(period);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(microbit_accelerometer_set_rate_obj, microbit_accelerometer_set_rate);
@@ -95,9 +97,10 @@ mp_obj_t microbit_accelerometer_get_range(mp_obj_t self_in) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(microbit_accelerometer_get_range_obj, microbit_accelerometer_get_range);
 
-mp_obj_t microbit_accelerometer_set_range(mp_obj_t self_in, mp_int_t g) {
+mp_obj_t microbit_accelerometer_set_range(mp_obj_t self_in, mp_obj_t g) {
     microbit_accelerometer_obj_t *self = (microbit_accelerometer_obj_t*)self_in;
-    return mp_obj_new_int(self->accelerometer->setRange(g));
+    self->accelerometer->setRange(mp_obj_get_int(g));
+    return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_2(microbit_accelerometer_set_range_obj, microbit_accelerometer_set_range);
 
